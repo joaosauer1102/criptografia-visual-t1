@@ -150,4 +150,56 @@ void reverter_difusao(Imagem *img) {
     unsigned char *p_fim = img->dados + (total_pixels - 1) * 3;
 
     while (p_inicio < p_fim) {
-        trocar
+        trocar_pixels(p_inicio, p_fim);
+        p_inicio += 3;
+        p_fim -= 3;
+    }
+}
+
+int verificar_igualdade(Imagem *img1, Imagem *img2) {
+    if (img1->largura != img2->largura || img1->altura != img2->altura) {
+        return 0;
+    }
+
+    int total_bytes = img1->largura * img1->altura * 3;
+    unsigned char *p1 = img1->dados;
+    unsigned char *p2 = img2->dados;
+
+    for (int i = 0; i < total_bytes; i++) {
+        if (*p1 != *p2) {
+            return 0;
+        }
+        p1++;
+        p2++;
+    }
+    return 1;
+}
+
+int main() {
+    Imagem *img_original = carregar_ppm("original.ppm");
+    Imagem *img_processada = carregar_ppm("original.ppm");
+
+    if (!img_original || !img_processada) {
+        printf("Erro ao carregar as imagens.\n");
+        return 1;
+    }
+
+    aplicar_confusao(img_processada);
+    aplicar_difusao(img_processada);
+    salvar_ppm("baguncada.ppm", img_processada);
+
+    reverter_difusao(img_processada);
+    reverter_confusao(img_processada);
+    salvar_ppm("recuperada.ppm", img_processada);
+
+    if (verificar_igualdade(img_original, img_processada)) {
+        printf("SUCESSO: 100%% dos bytes recuperados com exatidao!\n");
+    } else {
+        printf("ERRO: A imagem recuperada difere da original.\n");
+    }
+
+    liberar_imagem(img_original);
+    liberar_imagem(img_processada);
+
+    return 0;
+}
